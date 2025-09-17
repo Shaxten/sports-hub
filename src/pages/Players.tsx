@@ -1,82 +1,100 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  flexRender
-} from "@tanstack/react-table";
-
-import type { SortingState } from "@tanstack/react-table";
+import React, { useEffect, useState } from "react";
 
 type Player = {
-  playerId: number;
-  firstName: string;
-  lastName: string ;
-  teamAbbrev: string;
-  goals: number;
-  assists: number;
-  points: number;
+  id: number;
+  firstName: { default: string };
+  lastName: { default: string };
+  sweaterNumber: number;
+  headshot: string;
+  teamLogo: string;
+  teamName: { default: string };
+  position: string;
+  value: number; // goals
+  points?: number; // total points
+  assists?: number; // assists points
 };
 
-export default function Players() {
-  const [data, setData] = useState<Player[]>([]);
-  const [sorting, setSorting] = useState<SortingState>([]);
+const Players: React.FC = () => {
+  const [stats, setStats] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<"goals" | "points" | "assists">("goals");
 
   useEffect(() => {
-axios.get("/api/nhl-stats").then((res) => {
-  setData(res.data);
-});
+    fetch("http://localhost:5000/api/skater-stats")
+      .then((res) => res.json())
+      .then((data) => {
+        setStats(data.stats || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
   }, []);
 
-  const columns = [
-    {
-      header: "Player",
-      accessorFn: (row: Player) => `${row.firstName} ${row.lastName}`,
-    },
-    { header: "Team", accessorKey: "teamAbbrev" },
-    { header: "Goals", accessorKey: "goals" },
-    { header: "Assists", accessorKey: "assists" },
-    { header: "Points", accessorKey: "points" },
-  ];
+  if (loading) return <p>Loading...</p>;
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-  });
+const sortedStats = [...stats].sort((a, b) => {
+  if (sortBy === "goals") return b.value - a.value;
+  if (sortBy === "points") return (b.points || 0) - (a.points || 0);
+  return (b.assists || 0) - (a.assists || 0); // sort by assists
+});
 
   return (
-    <table className="border-collapse border w-full text-left">
-      <thead>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <tr key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <th
-                key={header.id}
-                onClick={header.column.getToggleSortingHandler()}
-                className="cursor-pointer border p-2"
-              >
-                {flexRender(header.column.columnDef.header, header.getContext())}
-              </th>
-            ))}
+    <div>
+      <h1>Top NHL Players</h1>
+
+      <table style={{ borderCollapse: "collapse", width: "100%" }}>
+        <thead>
+          <tr>
+            <th style={{ border: "1px solid #ddd", padding: "8px" }}>#</th>
+            <th style={{ border: "1px solid #ddd", padding: "8px" }}>Player</th>
+            <th style={{ border: "1px solid #ddd", padding: "8px" }}>Team</th>
+            <th style={{ border: "1px solid #ddd", padding: "8px" }}>Position</th>
+            <th
+              style={{ border: "1px solid #ddd", padding: "8px", cursor: "pointer" }}
+              onClick={() => setSortBy("goals")}
+            >
+              Goals
+            </th>
+                        <th
+              style={{ border: "1px solid #ddd", padding: "8px", cursor: "pointer" }}
+              onClick={() => setSortBy("assists")}
+            >
+              Assists
+            </th>
+            <th
+              style={{ border: "1px solid #ddd", padding: "8px", cursor: "pointer" }}
+              onClick={() => setSortBy("points")}
+            >
+              Points
+            </th>
+            <th style={{ border: "1px solid #ddd", padding: "8px" }}>Headshot</th>
           </tr>
-        ))}
-      </thead>
-      <tbody>
-        {table.getRowModel().rows.map((row) => (
-          <tr key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <td key={cell.id} className="border p-2">
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </thead>
+        <tbody>
+          {sortedStats.slice(0, 20).map((player) => (
+            <tr key={player.id}>
+              <td style={{ border: "1px solid #ddd", padding: "8px" }}>{player.sweaterNumber}</td>
+              <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                {player.firstName.default} {player.lastName.default}
               </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+              <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                <img src={player.teamLogo} alt={player.firstName.default} width={50} />
+              </td>
+              <td style={{ border: "1px solid #ddd", padding: "8px" }}>{player.position}</td>
+              <td style={{ border: "1px solid #ddd", padding: "8px" }}>{player.value}</td>
+              <td style={{ border: "1px solid #ddd", padding: "8px" }}>{player.assists}</td>
+              <td style={{ border: "1px solid #ddd", padding: "8px" }}>{player.points}</td>
+              <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                <img src={player.headshot} alt={player.firstName.default} width={50} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
-}
+};
+
+export default Players;
