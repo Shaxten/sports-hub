@@ -11,8 +11,8 @@ import type { SortingState } from "@tanstack/react-table";
 
 type Player = {
   playerId: number;
-  firstName: { default: string };
-  lastName: { default: string };
+  firstName: string;
+  lastName: string ;
   teamAbbrev: string;
   goals: number;
   assists: number;
@@ -32,7 +32,7 @@ axios.get("/api/nhl-stats").then((res) => {
   const columns = [
     {
       header: "Player",
-      accessorFn: (row: Player) => `${row.firstName.default} ${row.lastName.default}`,
+      accessorFn: (row: Player) => `${row.firstName} ${row.lastName}`,
     },
     { header: "Team", accessorKey: "teamAbbrev" },
     { header: "Goals", accessorKey: "goals" },
