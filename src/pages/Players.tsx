@@ -20,7 +20,7 @@ const Players: React.FC = () => {
   const [sortBy, setSortBy] = useState<"goals" | "points" | "assists">("goals");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/skater-stats")
+    fetch("https://backend-sports-9j9z.onrender.com/api/skater-stats")
       .then((res) => res.json())
       .then((data) => {
         setStats(data.stats || []);
@@ -80,14 +80,14 @@ const sortedStats = [...stats].sort((a, b) => {
                 {player.firstName.default} {player.lastName.default}
               </td>
               <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                <img src={player.teamLogo} alt={player.firstName.default} width={50} />
+                <img src={player.teamLogo} alt={player.firstName.default} width={75} />
               </td>
               <td style={{ border: "1px solid #ddd", padding: "8px" }}>{player.position}</td>
               <td style={{ border: "1px solid #ddd", padding: "8px" }}>{player.value}</td>
               <td style={{ border: "1px solid #ddd", padding: "8px" }}>{player.assists}</td>
               <td style={{ border: "1px solid #ddd", padding: "8px" }}>{player.points}</td>
               <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                <img src={player.headshot} alt={player.firstName.default} width={50} />
+                <img src={player.headshot} alt={player.firstName.default} width={75} />
               </td>
             </tr>
           ))}
